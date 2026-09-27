@@ -1,0 +1,15 @@
+# Entorno virtual
+venv/
+env/
+ENV/
+
+# Archivos de configuración sensible
+.env
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VS Code
+.vscode/
