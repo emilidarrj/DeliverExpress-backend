@@ -1,4 +1,29 @@
-# app/schemas/__init__.py
-# Contrato PUBLICO JSON (Pydantic). Espeja roadmap §3 (forma del pedido) y los
-# cuerpos de entrada de §4. Nombres en snake_case, identicos a las columnas/vistas.
-# Este es el unico sitio que define lo que ve el front. Se rellena en el paso 2.
+"""Contrato publico JSON (Pydantic). Re-exporta lo que usan los routers."""
+from .pedido import (
+    ClienteResumen,
+    DetallePedido,
+    DireccionResumen,
+    EstadoCodigo,
+    HistorialEstado,
+    Moneda,
+    PedidoCompleto,
+    RepartidorResumen,
+    RestauranteResumen,
+    TipoCalificacion,
+    TipoVehiculo,
+)
+
+__all__ = [
+    "PedidoCompleto",
+    "RestauranteResumen",
+    "ClienteResumen",
+    "DireccionResumen",
+    "RepartidorResumen",
+    "DetallePedido",
+    "HistorialEstado",
+    # catalogos cerrados (fiel a roadmap_bd §3/§4)
+    "EstadoCodigo",
+    "TipoVehiculo",
+    "Moneda",
+    "TipoCalificacion",
+]

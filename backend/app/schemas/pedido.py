@@ -1,13 +1,29 @@
-"""Forma del pedido completo. Espejo EXACTO de roadmap_backend.txt §3.
-NO calcula nada: todos los importes/fechas/coordenadas vienen de la BD (RNF-05).
-Si el grupo cambia la §3, se cambia aqui Y en roadmap_backend.txt, avisando al grupo."""
+"""Forma del pedido completo (roadmap_backend.txt §3), con la nullabilidad y
+los catalogos de roadmap_bd.txt §3/§4. ESPEJO CONGELADO: se modifica SOLO si
+el Int.1/2 notifica un cambio en 01_esquema_tablas.sql o 02_catalogos.sql, y
+entonces se actualiza aqui Y en roadmap_backend.txt avisando al grupo (§0).
+NO calcula nada (RNF-05). Dinero/coordenadas salen float por §3 (transporte
+JSON); en la BD se guardan NUMERIC (RNF-06 = almacenamiento). NO cambiar a
+Decimal: Pydantic v2 lo serializaria como string y rompe formato.js del front."""
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+# Catalogos cerrados de roadmap_bd §3/§4 (CHECK / estado_pedido / calificacion.tipo).
+EstadoCodigo = Literal[
+    "recibido", "en_preparacion", "listo_para_retirar",
+    "en_camino", "entregado", "cancelado",
+]
+TipoVehiculo = Literal["bicicleta", "moto", "auto"]
+Moneda = Literal["USD", "VES"]
+TipoCalificacion = Literal[
+    "cliente_a_repartidor", "cliente_a_restaurante", "repartidor_a_cliente",
+]
+
 
 class _Salida(BaseModel):
-    # Base comun: permite model_validate(fila_de_vista_o_Row) sin cambiar el contrato.
+    # Permite model_validate(fila de vista/Row). NO significa devolver ORM crudo (§0).
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -28,7 +44,7 @@ class ClienteResumen(_Salida):
 class DireccionResumen(_Salida):
     id_direccion: int
     direccion: str
-    referencia: str
+    referencia: str | None          # (NULL) roadmap_bd §3
     latitud: float
     longitud: float
 
@@ -37,15 +53,15 @@ class RepartidorResumen(_Salida):
     id_repartidor: int
     nombre: str
     telefono: str
-    tipo_vehiculo: str
+    tipo_vehiculo: TipoVehiculo
     calificacion_promedio: float
-    latitud_actual: float
-    longitud_actual: float
+    latitud_actual: float | None    # (NULL) roadmap_bd §3: repartidor sin posicion
+    longitud_actual: float | None   # (NULL) roadmap_bd §3
 
 
 class DetallePedido(_Salida):
     id_producto: int
-    nombre: str
+    nombre: str                     # derivado: JOIN producto.nombre
     cantidad: int
     precio_unitario: float
     subtotal: float
@@ -53,16 +69,16 @@ class DetallePedido(_Salida):
 
 class HistorialEstado(_Salida):
     id_estado: int
-    estado_codigo: str
-    estado_nombre: str
+    estado_codigo: EstadoCodigo     # derivado: JOIN estado_pedido.codigo
+    estado_nombre: str              # derivado: JOIN estado_pedido.nombre
     fecha_hora: datetime
 
 
 class PedidoCompleto(_Salida):
     id_pedido: int
     id_estado: int
-    estado_codigo: str
-    estado_nombre: str
+    estado_codigo: EstadoCodigo     # derivado: JOIN estado_pedido.codigo
+    estado_nombre: str              # derivado: JOIN estado_pedido.nombre
     fecha_creacion: datetime
 
     subtotal: float
@@ -72,19 +88,25 @@ class PedidoCompleto(_Salida):
     igtf: float
     total: float
 
-    moneda_pago: str
+    moneda_pago: Moneda
     tasa_bcv_aplicada: float
     total_ves: float
 
-    id_factura: int | None          # se llena al entregar (BD)
+    id_factura: int | None          # derivado: LEFT JOIN factura (no es columna de pedido)
     distancia_km: float
-    tiempo_estimado_min: int
-    motivo_cancelacion: str | None
+    tiempo_estimado_min: int | None  # (NULL) roadmap_bd §3
+    motivo_cancelacion: str | None   # (NULL) roadmap_bd §3
 
     restaurante: RestauranteResumen
     cliente: ClienteResumen
     direccion: DireccionResumen
-    repartidor: RepartidorResumen | None
+    repartidor: RepartidorResumen | None   # pedido.id_repartidor (NULL)
     detalle: list[DetallePedido]
     historial: list[HistorialEstado]
-    calificaciones_hechas: list[str]
+    calificaciones_hechas: list[TipoCalificacion]
+
+# Columnas de BD que a PROPOSITO NO se exponen (no estan en §3 backend; agregarlas
+# violaria "no inventar" de roadmap_backend §0 / roadmap_bd §0): comision_plataforma,
+# monto_restaurante (el restaurante los ve via vw_desempeno_restaurantes/vw_liquidacion),
+# id_zona/principal (direccion), id_categoria/tiempo_prep_min/rif (restaurante),
+# cedula/disponibilidad/prioridad (repartidor), id_historial/id_usuario (historial).
