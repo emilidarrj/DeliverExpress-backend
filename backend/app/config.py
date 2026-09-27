@@ -1,21 +1,28 @@
+"""Lectura de configuracion desde .env. roadmap_backend.txt §1."""
 import os
 from dotenv import load_dotenv
 
-# Carga las variables de entorno desde el archivo .env ubicado en la carpeta backend
-load_dotenv()
+load_dotenv()  # busca backend/.env
+
 
 class Settings:
-    PROJECT_NAME: str = "DeliverExpress API"
-    
-    # Base de datos
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg://usuario:password@localhost:5432/nombre_db")
-    
-    # Seguridad / JWT
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "tu_clave_secreta_super_segura")
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    
-    # CORS (permitir orígenes del frontend)
-    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
+    def __init__(self) -> None:
+        self.database_url: str = os.getenv(
+            "DATABASE_URL",
+            "postgresql+psycopg://de_app:CLAVE@localhost:5432/deliverexpress",
+        )
+        self.listen_url: str = os.getenv(
+            "LISTEN_URL",
+            "postgresql://de_app:CLAVE@localhost:5432/deliverexpress",
+        )
+        self.jwt_secret: str = os.getenv("JWT_SECRET", "cambiar_esto")
+        self.jwt_expira_min: int = int(os.getenv("JWT_EXPIRA_MIN", "480"))
+        # "a,b,c" -> ["a","b","c"]
+        self.cors_origins: list[str] = [
+            o.strip()
+            for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+            if o.strip()
+        ]
+
 
 settings = Settings()

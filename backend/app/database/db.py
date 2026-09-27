@@ -1,21 +1,23 @@
+"""Conexion SQLAlchemy con el esquema deliverexpress. roadmap §1."""
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import Session, sessionmaker
+
 from app.config import settings
 
-# Crea el motor de conexión forzando el esquema "deliverexpress"
+# search_path por conexion: asi de_app ve el esquema sin prefijar en cada query.
 engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"options": "-c search_path=deliverexpress"}
+    settings.database_url,
+    pool_pre_ping=True,
+    connect_args={"options": "-c search_path=deliverexpress"},
 )
 
-# Configura la sesión de base de datos
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# Base para los modelos de SQLAlchemy
-Base = declarative_base()
 
-# Dependencia para obtener la sesión en los endpoints
-def get_db():
+def get_db() -> Generator[Session, None, None]:
+    """Dependencia FastAPI: abre sesion, la cede y la cierra."""
     db = SessionLocal()
     try:
         yield db
