@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 # =====================================================================
-# 1. BASES TÉCNICAS Y CATÁLOGOS (compartidos.py y pedido.py)
+# 1. BASES TÉCNICAS Y CATÁLOGOS
 # =====================================================================
 class _Salida(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -52,7 +52,7 @@ class CalificarOut(_Salida):
 
 
 # =====================================================================
-# 3. ENTIDADES BASE PARA PEDIDO COMPLETO (pedido.py)
+# 3. ENTIDADES BASE PARA PEDIDO COMPLETO
 # =====================================================================
 class RestauranteResumen(_Salida):
     id_restaurante: int
@@ -128,7 +128,7 @@ class PedidoCompleto(_Salida):
 
 
 # =====================================================================
-# 4. AUTH (auth.py)
+# 4. AUTH
 # =====================================================================
 class LoginIn(BaseModel):
     email: str
@@ -158,7 +158,7 @@ class YoOut(BaseModel):
 
 
 # =====================================================================
-# 5. PÚBLICO (publico.py)
+# 5. PÚBLICO
 # =====================================================================
 class CategoriaOut(_Salida):
     id_categoria: int
@@ -170,9 +170,8 @@ class ZonaOut(_Salida):
     latitud_centro: float
     longitud_centro: float
 
-
 # =====================================================================
-# 6. ADMIN (admin.py)
+# 6. ADMIN
 # =====================================================================
 class ZonaAdminOut(_Salida):
     id_zona: int
@@ -318,9 +317,8 @@ class CoordinadorAdminIn(_Entrada):
 class UsuarioActivoIn(_Entrada):
     activo: bool
 
-
 # =====================================================================
-# 7. CLIENTE (cliente.py)
+# 7. CLIENTE 
 # =====================================================================
 TipoCalCliente = Literal["cliente_a_repartidor", "cliente_a_restaurante"]
 
@@ -427,9 +425,8 @@ class CalificarIn(_Entrada):
 class DatosFiscalesIn(_Entrada):
     cedula_rif: str = Field(pattern=_CEDULA_RIF)
 
-
 # =====================================================================
-# 8. COORDINADOR (coordinador.py)
+# 8. COORDINADOR
 # =====================================================================
 class VwPedidosActivosRow(_Salida):
     id_pedido: int
@@ -533,9 +530,8 @@ class RevisionOut(_Salida):
 class ReasignarIn(BaseModel):
     id_repartidor: int | None
 
-
 # =====================================================================
-# 9. FACTURACIÓN (facturacion.py)
+# 9. FACTURACIÓN 
 # =====================================================================
 TipoFactura = Literal["factura_cliente", "factura_comision", "nota_credito"]
 EstadoFactura = Literal["emitida", "anulada"]
@@ -639,6 +635,19 @@ class LiquidacionRow(_Salida):
     total: float
     fecha_emision: datetime
 
+class LiquidacionAdminRow(_Salida):
+    id_liquidacion: int
+    numero: str
+    id_repartidor: int
+    repartidor: str
+    periodo_desde: date
+    periodo_hasta: date
+    viajes: int
+    total_envios: float
+    total_propinas: float
+    total: float
+    fecha_emision: datetime
+
 class PeriodoIn(BaseModel):
     desde: date
     hasta: date
@@ -646,12 +655,14 @@ class PeriodoIn(BaseModel):
 class AnularIn(BaseModel):
     motivo: str = Field(min_length=1, max_length=300)
 
+class AnularOut(_Salida):  
+    id_factura: int
+
 class CreadasOut(_Salida):
     creadas: int
 
-
 # =====================================================================
-# 10. REPARTIDOR (repartidor.py)
+# 10. REPARTIDOR
 # =====================================================================
 DisponibilidadSet = Literal["libre", "desconectado"]
 
@@ -695,7 +706,7 @@ class RepartidorHistorialOut(_Salida):
 
 
 # =====================================================================
-# 11. RESTAURANTE (restaurante.py)
+# 11. RESTAURANTE
 # =====================================================================
 class RestauranteProductoOut(_Salida):
     id_producto: int

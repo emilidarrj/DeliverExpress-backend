@@ -9,7 +9,7 @@ from app.config import settings
 from app.db import get_db
 from app.errores import ErrorAPI, registrar_manejadores
 from app.seguridad import crear_token, get_current_user, requiere_rol
-from app.routers import publico, auth, restaurante
+from app.routers import publico, auth, restaurante, cliente, repartidor, coordinador, facturas, admin
 
 
 @asynccontextmanager
@@ -54,11 +54,11 @@ registrar_manejadores(app)
 app.include_router(publico.router)      # PUBLICO
 app.include_router(auth.router)         # AUTH (fn_login/fn_registrar_cliente, §10 BD)
 app.include_router(restaurante.router)  # RESTAURANTE
-# app.include_router(cliente.router)       # CLIENTE   (cuando exista cliente.py)
-# app.include_router(repartidor.router)    # REPARTIDOR
-# app.include_router(coordinador.router)   # COORDINADOR
-# app.include_router(facturas.router)      # FACTURACION (/api/facturas + /api/coordinador/... + /api/admin/facturacion/...)
-# app.include_router(admin.router)         # ADMIN (/api/admin/...)
+app.include_router(cliente.router)       # CLIENTE 
+app.include_router(repartidor.router)    # REPARTIDOR
+app.include_router(coordinador.router)   # COORDINADOR
+app.include_router(facturas.router)      # FACTURACION (/api/facturas + /api/coordinador/... + /api/admin/facturacion/...)
+app.include_router(admin.router)         # ADMIN (/api/admin/...)
 # app.include_router(ws.router)            # /ws (sin prefijo /api)
 
 
