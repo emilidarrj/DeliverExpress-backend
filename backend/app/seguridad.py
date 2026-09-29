@@ -11,7 +11,7 @@ from app.errores import ErrorAPI
 _ALG = "HS256"
 
 
-def crear_token(id_usuario: int, rol: str, id_perfil: int, nombre: str) -> str:
+def crear_token(id_usuario: int, rol: str, id_perfil: int | None, nombre: str) -> str:
     """Arma el JWT con las claims pactadas. sub va como string (estandar JWT)."""
     ahora = datetime.now(timezone.utc)
     payload = {

@@ -1,4 +1,4 @@
-"""Punto de entrada FastAPI. roadmap_backend.txt §1 y §5."""
+"""Punto de entrada FastAPI."""
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
@@ -6,22 +6,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.config import settings
-from app.database.db import get_db
+from app.db import get_db
 from app.errores import ErrorAPI, registrar_manejadores
 from app.seguridad import crear_token, get_current_user, requiere_rol
+from app.routers import publico, auth, restaurante
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # ---- ARRANQUE (reemplaza al viejo on_event("startup")) ----
-    # Cuando el Int.2 entregue las funciones SQL, descomenta:
+    # ---- ARRANQUE ----
+    # Cuando el Int.2 entregue las funciones SQL, descomentar:
     # from app.tiempo_real.listener import arrancar_listener
     # from app.tareas.expirar_ofertas import arrancar_expiracion
     # await arrancar_listener(_app)
     # await arrancar_expiracion()
     print("[lifespan] listener y tareas aun no activos (faltan BD y funciones SQL).")
     yield
-    # ---- APAGÓN ----
+    # ---- APAGON ----
     print("[lifespan] apagando backend.")
 
 
@@ -33,7 +34,7 @@ app = FastAPI(
 )
 
 # CORS: settings.cors_origins YA es lista (config.py parte el .env por coma).
-# NO lo envuelvas en [ ]: anidaría la lista y rompería el preflight del front.
+# NO lo envuelvas en [ ]: anidaria la lista y romperia el preflight del front.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -43,8 +44,22 @@ app.add_middleware(
 )
 
 # REGISTRA los manejadores ANTES de cualquier ruta: fuerza {"error","mensaje"}
-# en 404/422/DBAPIError/ErrorAPI. Sin esta línea el contrato §0 se rompe.
+# en 404/422/DBAPIError/ErrorAPI. Sin esta linea el contrato §0 se rompe.
 registrar_manejadores(app)
+
+
+# ---------------------------------------------------------------------------
+# MONTAJE DE ROUTERS. 
+# ---------------------------------------------------------------------------
+app.include_router(publico.router)      # PUBLICO
+app.include_router(auth.router)         # AUTH (fn_login/fn_registrar_cliente, §10 BD)
+app.include_router(restaurante.router)  # RESTAURANTE
+# app.include_router(cliente.router)       # CLIENTE   (cuando exista cliente.py)
+# app.include_router(repartidor.router)    # REPARTIDOR
+# app.include_router(coordinador.router)   # COORDINADOR
+# app.include_router(facturas.router)      # FACTURACION (/api/facturas + /api/coordinador/... + /api/admin/facturacion/...)
+# app.include_router(admin.router)         # ADMIN (/api/admin/...)
+# app.include_router(ws.router)            # /ws (sin prefijo /api)
 
 
 # ---------------------------------------------------------------------------
@@ -56,18 +71,19 @@ def ruta_raiz() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# ROUTER DE PRUEBA (TEMPORAL). Borrar cuando exista routers/auth.py real.
-# Valida JWT, requiere_rol y el formato de error SIN base de datos.
+# DEMO TEMPORALES (prefijo _). Borrar cuando cubran su funcion los routers reales.
+# Validan JWT, requiere_rol y el formato de error SIN base de datos.
 # ---------------------------------------------------------------------------
-@app.post("/api/auth/_token-demo")
+@app.post("/api/_token-demo")
 def _token_demo(rol: str = "cliente") -> dict:
     """Emite un token fake por rol. En produccion lo hace fn_login (§2)."""
     return {"token": crear_token(1, rol, 7, f"{rol.capitalize()} Demo")}
 
 
-@app.get("/api/auth/yo")
-def _yo(user: dict = Depends(get_current_user)) -> dict:
-    """Refleja las claims. Forma de §4: GET /api/auth/yo."""
+@app.get("/api/_yo-demo")
+def _yo_demo(user: dict = Depends(get_current_user)) -> dict:
+    """Refleja las claims. La ruta REAL /api/auth/yo la da routers/auth.py con
+    response_model=YoOut; aqui va con prefijo _ para no hacer shadowing."""
     return {
         "id_usuario": int(user["sub"]),
         "rol": user["rol"],
