@@ -24,6 +24,8 @@ def crear_token(id_usuario: int, rol: str, id_perfil: int | None, nombre: str) -
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=_ALG)
 
+def decode_token(token: str) -> dict[str, Any]:
+    return jwt.decode(token, settings.jwt_secret, algorithms=[_ALG])
 
 def get_current_user(
     authorization: str | None = Header(default=None),
