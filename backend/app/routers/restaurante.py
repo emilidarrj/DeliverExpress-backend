@@ -35,7 +35,7 @@ def listar_pedidos(activos: bool = True, db: Session = Depends(get_db),
         "SELECT id_pedido FROM pedido WHERE id_restaurante = :r AND id_estado = ANY(:e) "
         "ORDER BY fecha_creacion DESC"
     ), {"r": user["id_perfil"], "e": list(estados)}).scalars().all()
-    return [armar_pedido_completo(db, i) for i in ids]  # N+1 aceptable (tablero chico, RN-09)
+    return [armar_pedido_completo(db, i) for i in ids]  # N+1 aceptable: pocos pedidos en {1,2,3} simultaneos por restaurante (ventana del tablero)
 
 
 @router.post("/pedidos/{id}/aceptar", response_model=PedidoCompleto)
@@ -97,7 +97,7 @@ def actualizar_producto(id: int, datos: ProductoActualizarIn, db: Session = Depe
            "e": datos.exento_iva, "disp": datos.disponible, "id": id, "r": user["id_perfil"]}).mappings().first()
     db.commit()
     if row is None:
-        raise ErrorAPI("NO_ENCONTRADO", "Producto no es de este restaurante.", 404)   # fix 2
+        raise ErrorAPI("SIN_PERMISO", "El producto no es de este restaurante.", 403)   # B: 404->403, consistente con _check_pedido (mismo predicado id AND id_restaurante)
     return OkRespuesta()  # §4 no fija respuesta del PUT -> OkRespuesta (anotado al grupo)
 
 

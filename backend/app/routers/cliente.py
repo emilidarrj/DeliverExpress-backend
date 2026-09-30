@@ -127,10 +127,7 @@ def detalle_pedido(id: int, db: Session = Depends(get_db), user: dict = Depends(
                         {"id": id, "c": user["id_perfil"]}).first()
     if duenio is None:
         raise ErrorAPI("SIN_PERMISO", "El pedido no es del cliente.", 403)
-    pedido = armar_pedido_completo(db, id)
-    if pedido is None:
-        raise ErrorAPI("NO_ENCONTRADO", "Pedido no existe.", 404)
-    return pedido
+    return armar_pedido_completo(db, id)
 
 
 @router.put("/datos-fiscales", response_model=OkRespuesta)
