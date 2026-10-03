@@ -22,7 +22,6 @@ async def lifespan(_app: FastAPI):
     # ---- APAGON ----
     print("[lifespan] apagando backend.")
 
-
 app = FastAPI(
     title="DeliverExpress API",
     version="0.1.0",

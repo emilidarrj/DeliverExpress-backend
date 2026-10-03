@@ -10,22 +10,33 @@ from pydantic import BaseModel, ConfigDict, Field
 class _Salida(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+
 class _Entrada(BaseModel):
     pass
+
 
 Rol = Literal["cliente", "restaurante", "repartidor", "coordinador", "admin"]
 Prioridad = Literal["normal", "baja"]
 DisponibilidadFull = Literal["libre", "ocupado", "desconectado"]
 
 EstadoCodigo = Literal[
-    "recibido", "en_preparacion", "listo_para_retirar",
-    "en_camino", "entregado", "cancelado",
+    "recibido",
+    "en_preparacion",
+    "listo_para_retirar",
+    "en_camino",
+    "entregado",
+    "cancelado",
 ]
+
 TipoVehiculo = Literal["bicicleta", "moto", "auto"]
 Moneda = Literal["USD", "VES"]
+
 TipoCalificacion = Literal[
-    "cliente_a_repartidor", "cliente_a_restaurante", "repartidor_a_cliente",
+    "cliente_a_repartidor",
+    "cliente_a_restaurante",
+    "repartidor_a_cliente",
 ]
+
 
 # Expresiones regulares compartidas
 _CEDULA = r"^[VE]-[0-9]{6,9}$"
@@ -39,13 +50,16 @@ _CEDULA_RIF = r"^(?:[VE]-[0-9]{6,9}|[VEJPG]-[0-9]{8}-[0-9])$"
 class OkRespuesta(BaseModel):
     ok: bool = True
 
+
 class MotivoIn(_Entrada):
     motivo: str = Field(min_length=1, max_length=200)
+
 
 class HorarioItem(_Salida):
     dia_semana: int = Field(ge=0, le=6)
     hora_apertura: time
     hora_cierre: time
+
 
 class CalificarOut(_Salida):
     id_calificacion: int
@@ -61,10 +75,12 @@ class RestauranteResumen(_Salida):
     latitud: float
     longitud: float
 
+
 class ClienteResumen(_Salida):
     id_cliente: int
     nombre: str
     telefono: str
+
 
 class DireccionResumen(_Salida):
     id_direccion: int
@@ -72,6 +88,7 @@ class DireccionResumen(_Salida):
     referencia: str | None
     latitud: float
     longitud: float
+
 
 class RepartidorResumen(_Salida):
     id_repartidor: int
@@ -82,6 +99,7 @@ class RepartidorResumen(_Salida):
     latitud_actual: float | None
     longitud_actual: float | None
 
+
 class DetallePedido(_Salida):
     id_producto: int
     nombre: str
@@ -89,11 +107,13 @@ class DetallePedido(_Salida):
     precio_unitario: float
     subtotal: float
 
+
 class HistorialEstado(_Salida):
     id_estado: int
     estado_codigo: EstadoCodigo
     estado_nombre: str
     fecha_hora: datetime
+
 
 class PedidoCompleto(_Salida):
     id_pedido: int
@@ -134,11 +154,13 @@ class LoginIn(BaseModel):
     email: str
     password: str
 
+
 class LoginOut(BaseModel):
     token: str
     rol: Rol
     id_perfil: int | None
     nombre: str
+
 
 class RegistroClienteIn(BaseModel):
     email: str
@@ -147,8 +169,10 @@ class RegistroClienteIn(BaseModel):
     telefono: str = Field(max_length=20)
     cedula_rif: str | None = None
 
+
 class RegistroClienteOut(BaseModel):
     id_cliente: int
+
 
 class YoOut(BaseModel):
     id_usuario: int
@@ -163,6 +187,7 @@ class YoOut(BaseModel):
 class CategoriaOut(_Salida):
     id_categoria: int
     nombre: str
+
 
 class ZonaOut(_Salida):
     id_zona: int
@@ -181,18 +206,22 @@ class ZonaAdminOut(_Salida):
     latitud_centro: float
     longitud_centro: float
 
+
 class ZonaAdminIn(_Entrada):
     nombre: str = Field(max_length=80)
     descripcion: str | None = None
     latitud_centro: float
     longitud_centro: float
 
+
 class CategoriaAdminOut(_Salida):
     id_categoria: int
     nombre: str
 
+
 class CategoriaAdminIn(_Entrada):
     nombre: str = Field(max_length=60)
+
 
 class TarifaAdminOut(_Salida):
     id_tarifa: int
@@ -200,27 +229,33 @@ class TarifaAdminOut(_Salida):
     km_hasta: float
     precio: float
 
+
 class TarifaAdminIn(_Entrada):
     km_desde: float
     km_hasta: float
     precio: float = Field(gt=0)
+
 
 class ParametroOut(_Salida):
     clave: str
     valor: str
     descripcion: str | None
 
+
 class ParametroIn(_Entrada):
     valor: str = Field(max_length=100)
+
 
 class TasaBcvOut(_Salida):
     fecha: date
     tasa_usd: float
     fecha_registro: datetime
 
+
 class TasaBcvIn(_Entrada):
     fecha: date
     tasa_usd: float = Field(gt=0)
+
 
 class RestauranteAdminOut(_Salida):
     id_restaurante: int
@@ -240,6 +275,7 @@ class RestauranteAdminOut(_Salida):
     activo: bool
     zonas: list[int]
 
+
 class RestauranteAdminIn(_Entrada):
     email: str
     password: str
@@ -255,6 +291,7 @@ class RestauranteAdminIn(_Entrada):
     direccion_fiscal: str = Field(max_length=250)
     zonas: list[int]
 
+
 class RestauranteAdminPutIn(_Entrada):
     nombre: str = Field(max_length=100)
     id_categoria: int
@@ -268,6 +305,7 @@ class RestauranteAdminPutIn(_Entrada):
     direccion_fiscal: str = Field(max_length=250)
     zonas: list[int]
     activo: bool
+
 
 class RepartidorAdminOut(_Salida):
     id_repartidor: int
@@ -286,6 +324,7 @@ class RepartidorAdminOut(_Salida):
     en_revision: bool
     activo: bool
 
+
 class RepartidorAdminIn(_Entrada):
     email: str
     password: str
@@ -295,6 +334,7 @@ class RepartidorAdminIn(_Entrada):
     tipo_vehiculo: TipoVehiculo
     id_zona: int
 
+
 class RepartidorAdminPutIn(_Entrada):
     nombre: str = Field(max_length=100)
     telefono: str = Field(max_length=20)
@@ -303,17 +343,20 @@ class RepartidorAdminPutIn(_Entrada):
     id_zona: int
     activo: bool
 
+
 class CoordinadorAdminOut(_Salida):
     id_coordinador: int
     id_usuario: int
     nombre: str
     telefono: str
 
+
 class CoordinadorAdminIn(_Entrada):
     email: str
     password: str
     nombre: str = Field(max_length=100)
     telefono: str = Field(max_length=20)
+
 
 class UsuarioActivoIn(_Entrada):
     activo: bool
@@ -322,7 +365,11 @@ class UsuarioActivoIn(_Entrada):
 # =====================================================================
 # 7. CLIENTE
 # =====================================================================
-TipoCalCliente = Literal["cliente_a_repartidor", "cliente_a_restaurante"]
+TipoCalCliente = Literal[
+    "cliente_a_repartidor",
+    "cliente_a_restaurante",
+]
+
 
 class DireccionOut(_Salida):
     id_direccion: int
@@ -334,6 +381,7 @@ class DireccionOut(_Salida):
     longitud: float
     principal: bool
 
+
 class DireccionIn(_Entrada):
     id_zona: int
     direccion: str = Field(max_length=200)
@@ -342,8 +390,10 @@ class DireccionIn(_Entrada):
     longitud: float
     principal: bool = False
 
+
 class DireccionCreadaOut(_Salida):
     id_direccion: int
+
 
 class RestauranteListaOut(_Salida):
     id_restaurante: int
@@ -356,6 +406,7 @@ class RestauranteListaOut(_Salida):
     distancia_km: float
     costo_envio: float
 
+
 class RestauranteDetalleOut(_Salida):
     id_restaurante: int
     nombre: str
@@ -366,12 +417,14 @@ class RestauranteDetalleOut(_Salida):
     tiempo_prep_min: int
     horario: list[HorarioItem]
 
+
 class ProductoClienteOut(_Salida):
     id_producto: int
     nombre: str
     descripcion: str | None
     precio: float
     exento_iva: bool
+
 
 class RecomendacionOut(_Salida):
     id_producto: int
@@ -381,9 +434,11 @@ class RecomendacionOut(_Salida):
     categoria: str
     veces_pedido: int
 
+
 class ItemProductoIn(_Entrada):
     id_producto: int
     cantidad: int = Field(gt=0)
+
 
 class CotizarIn(_Entrada):
     id_restaurante: int
@@ -391,6 +446,7 @@ class CotizarIn(_Entrada):
     productos: list[ItemProductoIn]
     propina: float = Field(ge=0)
     moneda_pago: Moneda
+
 
 class CotizarOut(_Salida):
     distancia_km: float
@@ -403,6 +459,7 @@ class CotizarOut(_Salida):
     tasa_bcv: float
     total_ves: float
 
+
 class CrearPedidoIn(_Entrada):
     id_restaurante: int
     id_direccion: int
@@ -410,6 +467,7 @@ class CrearPedidoIn(_Entrada):
     propina: float = Field(ge=0)
     moneda_pago: Moneda
     ultimos4: str = Field(pattern=r"^\d{4}$")
+
 
 class PedidoResumenOut(_Salida):
     id_pedido: int
@@ -419,16 +477,25 @@ class PedidoResumenOut(_Salida):
     estado_nombre: str
     total: float
 
+
 class CalificarIn(_Entrada):
     tipo: TipoCalCliente
     puntaje: int = Field(ge=1, le=5)
     comentario: str | None = Field(default=None, max_length=300)
 
 
-# ← CAMBIO 1: ahora acepta telefono además de cedula_rif
 class DatosFiscalesIn(_Entrada):
     cedula_rif: str = Field(pattern=_CEDULA_RIF)
     telefono: str | None = Field(default=None, max_length=20)
+
+
+# Perfil del cliente
+class PerfilClienteOut(_Salida):
+    id_cliente: int
+    nombre: str
+    email: str
+    telefono: str
+    cedula_rif: str | None = None
 
 
 # =====================================================================
@@ -459,6 +526,7 @@ class VwPedidosActivosRow(_Salida):
     minutos_desde_creacion: int
     total: float
 
+
 class CoordinadorRepartidorRow(_Salida):
     id_repartidor: int
     nombre: str
@@ -471,6 +539,7 @@ class CoordinadorRepartidorRow(_Salida):
     longitud_actual: float | None
     en_revision: bool
 
+
 class VwTiemposRow(_Salida):
     id_pedido: int
     id_restaurante: int
@@ -482,6 +551,7 @@ class VwTiemposRow(_Salida):
     min_entrega: int
     min_total: int
 
+
 class VwDesempenoRestaurantesRow(_Salida):
     id_restaurante: int
     restaurante: str
@@ -492,12 +562,13 @@ class VwDesempenoRestaurantesRow(_Salida):
     calificacion_promedio: float
     ventas_productos: float
 
+
 class VwDesempenoRepartidoresRow(_Salida):
     id_repartidor: int
     repartidor: str
     tipo_vehiculo: TipoVehiculo
     entregas: int
-    prom_min_entrega: float
+    prom_min_entrega: int
     ofertas_recibidas: int
     ofertas_rechazadas: int
     tasa_rechazo: float
@@ -505,6 +576,7 @@ class VwDesempenoRepartidoresRow(_Salida):
     calificacion_promedio: float
     prioridad: Prioridad
     en_revision: bool
+
 
 class VwLiquidacionRow(_Salida):
     fecha: date
@@ -517,11 +589,13 @@ class VwLiquidacionRow(_Salida):
     envios: float
     propinas: float
 
+
 class RevisionClienteRow(_Salida):
     id_cliente: int
     nombre: str
     calificacion_promedio: float
     total_calificaciones: int
+
 
 class RevisionRepartidorRow(_Salida):
     id_repartidor: int
@@ -529,9 +603,11 @@ class RevisionRepartidorRow(_Salida):
     calificacion_promedio: float
     total_calificaciones: int
 
+
 class RevisionOut(_Salida):
     clientes: list[RevisionClienteRow]
     repartidores: list[RevisionRepartidorRow]
+
 
 class ReasignarIn(BaseModel):
     id_repartidor: int | None
@@ -540,8 +616,14 @@ class ReasignarIn(BaseModel):
 # =====================================================================
 # 9. FACTURACIÓN
 # =====================================================================
-TipoFactura = Literal["factura_cliente", "factura_comision", "nota_credito"]
+TipoFactura = Literal[
+    "factura_cliente",
+    "factura_comision",
+    "nota_credito",
+]
+
 EstadoFactura = Literal["emitida", "anulada"]
+
 
 class DetalleFacturaOut(_Salida):
     descripcion: str
@@ -552,6 +634,7 @@ class DetalleFacturaOut(_Salida):
     base_item: float
     iva_item: float
     subtotal_item: float
+
 
 class FacturaOut(_Salida):
     id_factura: int
@@ -587,6 +670,7 @@ class FacturaOut(_Salida):
     fecha_emision: datetime
     detalle: list[DetalleFacturaOut]
 
+
 class VwFacturasRow(_Salida):
     id_factura: int
     tipo: TipoFactura
@@ -601,6 +685,7 @@ class VwFacturasRow(_Salida):
     moneda: Moneda
     total: float
     total_ves: float
+
 
 class VwLibroVentasRow(_Salida):
     fecha_emision: datetime
@@ -621,6 +706,7 @@ class VwLibroVentasRow(_Salida):
     total: float
     total_ves: float
 
+
 class VwResumenIvaRow(_Salida):
     periodo: str
     cantidad_documentos: int
@@ -630,6 +716,7 @@ class VwResumenIvaRow(_Salida):
     igtf: float
     total: float
     total_ves: float
+
 
 class LiquidacionRow(_Salida):
     id_liquidacion: int
@@ -641,6 +728,7 @@ class LiquidacionRow(_Salida):
     total_propinas: float
     total: float
     fecha_emision: datetime
+
 
 class LiquidacionAdminRow(_Salida):
     id_liquidacion: int
@@ -655,15 +743,19 @@ class LiquidacionAdminRow(_Salida):
     total: float
     fecha_emision: datetime
 
+
 class PeriodoIn(BaseModel):
     desde: date
     hasta: date
 
+
 class AnularIn(BaseModel):
     motivo: str = Field(min_length=1, max_length=300)
 
+
 class AnularOut(_Salida):
     id_factura: int
+
 
 class CreadasOut(_Salida):
     creadas: int
@@ -674,6 +766,7 @@ class CreadasOut(_Salida):
 # =====================================================================
 DisponibilidadSet = Literal["libre", "desconectado"]
 
+
 class RepartidorYoOut(_Salida):
     id_repartidor: int
     nombre: str
@@ -683,8 +776,10 @@ class RepartidorYoOut(_Salida):
     calificacion_promedio: float
     en_revision: bool
 
+
 class DisponibilidadIn(_Entrada):
     disponibilidad: DisponibilidadSet
+
 
 class OfertaPendienteOut(_Salida):
     id_oferta: int
@@ -693,16 +788,20 @@ class OfertaPendienteOut(_Salida):
     distancia_km: float
     pedido: PedidoCompleto
 
+
 class ResponderOfertaIn(_Entrada):
     acepta: bool
+
 
 class UbicacionIn(_Entrada):
     latitud: float
     longitud: float
 
+
 class CalificarRepartidorIn(_Entrada):
     puntaje: int = Field(ge=1, le=5)
     comentario: str | None = Field(default=None, max_length=300)
+
 
 class RepartidorHistorialOut(_Salida):
     id_pedido: int
@@ -724,11 +823,13 @@ class RestauranteProductoOut(_Salida):
     exento_iva: bool
     disponible: bool
 
+
 class ProductoCrearIn(_Entrada):
     nombre: str = Field(max_length=100)
     descripcion: str | None = None
     precio: float = Field(gt=0)
     exento_iva: bool = False
+
 
 class ProductoActualizarIn(_Entrada):
     nombre: str = Field(max_length=100)
@@ -737,8 +838,10 @@ class ProductoActualizarIn(_Entrada):
     exento_iva: bool
     disponible: bool
 
+
 class ProductoCreadoOut(_Salida):
     id_producto: int
+
 
 class HorarioIn(_Entrada):
     dia_semana: int = Field(ge=0, le=6)
@@ -746,10 +849,69 @@ class HorarioIn(_Entrada):
     hora_cierre: time
 
 
-# ← CAMBIO 2: se agregó cedula_rif
-class PerfilClienteOut(BaseModel):
-    id_cliente: int
+# =====================================================================
+# 12. PERFILES
+# =====================================================================
+# Estos esquemas son exclusivos de la pantalla "Mi perfil".
+# No reemplazan los esquemas Admin completos de las secciones anteriores.
+
+
+# ---------------------------------------------------------------------
+# 12.1 PERFIL RESTAURANTE
+# ---------------------------------------------------------------------
+class PerfilRestauranteOut(_Salida):
+    id_restaurante: int
     nombre: str
     email: str
     telefono: str
-    cedula_rif: str | None = None
+    rif: str
+    razon_social: str
+
+
+class PerfilRestauranteIn(_Entrada):
+    telefono: str = Field(max_length=20)
+    rif: str = Field(pattern=_RIF)
+
+
+# ---------------------------------------------------------------------
+# 12.2 PERFIL REPARTIDOR
+# ---------------------------------------------------------------------
+class PerfilRepartidorOut(_Salida):
+    id_repartidor: int
+    nombre: str
+    email: str
+    telefono: str
+    cedula: str
+
+
+class PerfilRepartidorIn(_Entrada):
+    telefono: str = Field(max_length=20)
+    cedula: str = Field(pattern=_CEDULA)
+
+
+# ---------------------------------------------------------------------
+# 12.3 PERFIL COORDINADOR
+# ---------------------------------------------------------------------
+class PerfilCoordinadorOut(_Salida):
+    id_coordinador: int
+    nombre: str
+    email: str
+    telefono: str
+
+
+class PerfilCoordinadorIn(_Entrada):
+    telefono: str = Field(max_length=20)
+
+
+# ---------------------------------------------------------------------
+# 12.4 PERFIL ADMIN
+# ---------------------------------------------------------------------
+class PerfilAdminOut(_Salida):
+    id_usuario: int
+    nombre: str
+    email: str
+    telefono: str
+
+
+class PerfilAdminIn(_Entrada):
+    telefono: str = Field(max_length=20)

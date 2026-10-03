@@ -7,6 +7,8 @@ from fastapi import Depends, Header
 
 from app.config import settings
 from app.errores import ErrorAPI
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+bearer_scheme = HTTPBearer(auto_error=False)
 
 _ALG = "HS256"
 
@@ -28,18 +30,40 @@ def decode_token(token: str) -> dict[str, Any]:
     return jwt.decode(token, settings.jwt_secret, algorithms=[_ALG])
 
 def get_current_user(
-    authorization: str | None = Header(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> dict[str, Any]:
-    """Devuelve el payload del token o lanza 401. El front manda: Bearer <token>."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise ErrorAPI("NO_AUTENTICADO", "Credenciales ausentes o invalidas.", 401)
-    token = authorization.split(" ", 1)[1].strip()
+    """Devuelve el payload del token o lanza 401.
+    Swagger y el front mandan: Bearer <token>.
+    """
+    if credentials is None:
+        raise ErrorAPI(
+            "NO_AUTENTICADO",
+            "Credenciales ausentes o invalidas.",
+            401
+        )
+
+    token = credentials.credentials
+
     try:
-        return jwt.decode(token, settings.jwt_secret, algorithms=[_ALG])
+        return jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[_ALG]
+        )
+
     except jwt.ExpiredSignatureError:
-        raise ErrorAPI("TOKEN_EXPIRADO", "Sesion expirada. Inicia sesion de nuevo.", 401)
+        raise ErrorAPI(
+            "TOKEN_EXPIRADO",
+            "Sesion expirada. Inicia sesion de nuevo.",
+            401
+        )
+
     except jwt.InvalidTokenError:
-        raise ErrorAPI("TOKEN_INVALIDO", "Token invalido.", 401)
+        raise ErrorAPI(
+            "TOKEN_INVALIDO",
+            "Token invalido.",
+            401
+        )
 
 
 def requiere_rol(*roles: str):
