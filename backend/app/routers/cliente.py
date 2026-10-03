@@ -11,12 +11,28 @@ from app.esquemas import (
     CalificarIn, CalificarOut, CotizarIn, CotizarOut, CrearPedidoIn,
     DatosFiscalesIn, DireccionCreadaOut, DireccionIn, DireccionOut, HorarioItem,
     PedidoCompleto, PedidoResumenOut, ProductoClienteOut, RecomendacionOut,
-    RestauranteDetalleOut, RestauranteListaOut, OkRespuesta,
+    RestauranteDetalleOut, RestauranteListaOut, OkRespuesta, PerfilClienteOut,
 )
 from app.seguridad import requiere_rol
 from app.services.pedido import armar_pedido_completo
 
 router = APIRouter(prefix="/api/cliente", tags=["cliente"])
+
+
+@router.get("/perfil", response_model=PerfilClienteOut)
+def perfil(db: Session = Depends(get_db), user: dict = Depends(requiere_rol("cliente"))):
+    row = db.execute(text("""
+        SELECT c.id_cliente, c.nombre, u.email, c.telefono, c.cedula_rif
+        FROM cliente c
+        JOIN usuario u ON u.id_usuario = c.id_usuario
+        WHERE c.id_cliente = :c
+    """), {"c": user["id_perfil"]}).mappings().first()
+    # ↑ CAMBIO: se agregó c.cedula_rif al SELECT
+
+    if row is None:
+        raise ErrorAPI("NO_ENCONTRADO", "Perfil de cliente no existe.", 404)
+
+    return PerfilClienteOut(**row)
 
 
 @router.get("/direcciones", response_model=list[DireccionOut])
@@ -32,6 +48,12 @@ def listar_direcciones(db: Session = Depends(get_db), user: dict = Depends(requi
 @router.post("/direcciones", response_model=DireccionCreadaOut, status_code=201)
 def crear_direccion(datos: DireccionIn, db: Session = Depends(get_db),
                     user: dict = Depends(requiere_rol("cliente"))):
+    # ← NUEVO: si esta dirección será principal, desmarcar todas las demás primero
+    if datos.principal:
+        db.execute(text("""
+            UPDATE direccion_cliente SET principal = FALSE WHERE id_cliente = :c
+        """), {"c": user["id_perfil"]})
+
     id_dir = db.execute(text("""
         INSERT INTO direccion_cliente (id_cliente, id_zona, direccion, referencia, latitud, longitud, principal)
         VALUES (:c, :z, :d, :r, :la, :lo, :p) RETURNING id_direccion
@@ -41,6 +63,50 @@ def crear_direccion(datos: DireccionIn, db: Session = Depends(get_db),
     db.commit()
     return DireccionCreadaOut(id_direccion=id_dir)
 
+@router.put("/direcciones/{id_direccion}/principal", response_model=OkRespuesta)
+def marcar_direccion_principal(
+    id_direccion: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(requiere_rol("cliente"))
+):
+    existe = db.execute(text("""
+        SELECT id_direccion
+        FROM direccion_cliente
+        WHERE id_direccion = :d
+          AND id_cliente = :c
+    """), {
+        "d": id_direccion,
+        "c": user["id_perfil"]
+    }).scalar_one_or_none()
+
+    if existe is None:
+        raise ErrorAPI(
+            "NO_ENCONTRADO",
+            "La dirección no pertenece al cliente.",
+            404
+        )
+
+    db.execute(text("""
+        UPDATE direccion_cliente
+        SET principal = FALSE
+        WHERE id_cliente = :c
+    """), {
+        "c": user["id_perfil"]
+    })
+
+    db.execute(text("""
+        UPDATE direccion_cliente
+        SET principal = TRUE
+        WHERE id_direccion = :d
+          AND id_cliente = :c
+    """), {
+        "d": id_direccion,
+        "c": user["id_perfil"]
+    })
+
+    db.commit()
+
+    return OkRespuesta(ok=True)
 
 @router.get("/restaurantes", response_model=list[RestauranteListaOut])
 def listar_restaurantes(id_direccion: int, id_categoria: int | None = None,
@@ -133,8 +199,13 @@ def detalle_pedido(id: int, db: Session = Depends(get_db), user: dict = Depends(
 @router.put("/datos-fiscales", response_model=OkRespuesta)
 def datos_fiscales(datos: DatosFiscalesIn, db: Session = Depends(get_db),
                    user: dict = Depends(requiere_rol("cliente"))):
-    db.execute(text("UPDATE cliente SET cedula_rif = :r WHERE id_cliente = :c"),
-               {"r": datos.cedula_rif, "c": user["id_perfil"]})
+    db.execute(text("""
+        UPDATE cliente
+        SET cedula_rif = :r,
+            telefono   = :t
+        WHERE id_cliente = :c
+    """), {"r": datos.cedula_rif, "t": datos.telefono, "c": user["id_perfil"]})
+    # ↑ CAMBIO: ahora también actualiza telefono
     db.commit()
     return OkRespuesta()
 

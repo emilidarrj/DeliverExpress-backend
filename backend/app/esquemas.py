@@ -170,6 +170,7 @@ class ZonaOut(_Salida):
     latitud_centro: float
     longitud_centro: float
 
+
 # =====================================================================
 # 6. ADMIN
 # =====================================================================
@@ -317,8 +318,9 @@ class CoordinadorAdminIn(_Entrada):
 class UsuarioActivoIn(_Entrada):
     activo: bool
 
+
 # =====================================================================
-# 7. CLIENTE 
+# 7. CLIENTE
 # =====================================================================
 TipoCalCliente = Literal["cliente_a_repartidor", "cliente_a_restaurante"]
 
@@ -422,8 +424,12 @@ class CalificarIn(_Entrada):
     puntaje: int = Field(ge=1, le=5)
     comentario: str | None = Field(default=None, max_length=300)
 
+
+# ← CAMBIO 1: ahora acepta telefono además de cedula_rif
 class DatosFiscalesIn(_Entrada):
     cedula_rif: str = Field(pattern=_CEDULA_RIF)
+    telefono: str | None = Field(default=None, max_length=20)
+
 
 # =====================================================================
 # 8. COORDINADOR
@@ -530,8 +536,9 @@ class RevisionOut(_Salida):
 class ReasignarIn(BaseModel):
     id_repartidor: int | None
 
+
 # =====================================================================
-# 9. FACTURACIÓN 
+# 9. FACTURACIÓN
 # =====================================================================
 TipoFactura = Literal["factura_cliente", "factura_comision", "nota_credito"]
 EstadoFactura = Literal["emitida", "anulada"]
@@ -655,11 +662,12 @@ class PeriodoIn(BaseModel):
 class AnularIn(BaseModel):
     motivo: str = Field(min_length=1, max_length=300)
 
-class AnularOut(_Salida):  
+class AnularOut(_Salida):
     id_factura: int
 
 class CreadasOut(_Salida):
     creadas: int
+
 
 # =====================================================================
 # 10. REPARTIDOR
@@ -736,3 +744,12 @@ class HorarioIn(_Entrada):
     dia_semana: int = Field(ge=0, le=6)
     hora_apertura: time
     hora_cierre: time
+
+
+# ← CAMBIO 2: se agregó cedula_rif
+class PerfilClienteOut(BaseModel):
+    id_cliente: int
+    nombre: str
+    email: str
+    telefono: str
+    cedula_rif: str | None = None
